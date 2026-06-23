@@ -1,0 +1,277 @@
+// ==========================================
+// PRISMA CONFIGURATION
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS (Các hằng số cố định)
+// ==========================================
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+// ==========================================
+// 1. NHÓM NGƯỜI DÙNG
+// ==========================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  fullName  String
+  phone     String?
+  role      Role     @default(CUSTOMER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Quan hệ (Relations)
+  addresses Address[]
+  cart      Cart?
+  orders    Order[]
+  reviews   Review[]
+  wishlists Wishlist[]
+
+  @@map("users") // đặt tên bảng trong db
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  street    String
+  city      String
+  state     String
+  zipCode   String?
+  isDefault Boolean @default(false)
+
+  // Nếu User bị xóa, toàn bộ địa chỉ của họ cũng bị xóa theo (Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+// ==========================================
+// 2. NHÓM DANH MỤC & THƯƠNG HIỆU
+// ==========================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  parentId    String? // Hỗ trợ danh mục con (Sub-category)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children Category[] @relation("SubCategories")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@map("brands")
+}
+
+// ==========================================
+// 3. NHÓM SẢN PHẨM
+// ==========================================
+
+model Product {
+  id          String   @id @default(cuid())
+  categoryId  String
+  brandId     String
+  name        String
+  slug        String   @unique
+  description String   @db.Text // @db.Text cho phép lưu văn bản rất dài (như bài viết)
+  basePrice   Float // Giá gốc để tham khảo
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+  brand    Brand    @relation(fields: [brandId], references: [id])
+
+  variants  ProductVariant[]
+  images    ProductImage[]
+  specs     ProductSpecification[]
+  reviews   Review[]
+  wishlists Wishlist[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id        String @id @default(cuid())
+  productId String
+  sku       String @unique // Mã quản lý kho duy nhất
+  name      String // VD: "Màu Đỏ - 128GB"
+  price     Float // Giá thực tế bán của biến thể này
+  stock     Int    @default(0) // Số lượng tồn kho
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  isPrimary Boolean @default(false) // Ảnh đại diện chính cho sản phẩm
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductSpecification {
+  id        String @id @default(cuid())
+  productId String
+  name      String // VD: "RAM"
+  value     String // VD: "8GB"
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_specifications")
+}
+
+// ==========================================
+// 4. NHÓM MUA SẮM (GIỎ HÀNG, WISHLIST)
+// ==========================================
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique // 1 User chỉ có duy nhất 1 Cart (1-1)
+  updatedAt DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  variantId String
+  quantity  Int    @default(1)
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // Một user chỉ được thêm 1 sản phẩm vào wishlist 1 lần
+  @@map("wishlists")
+}
+
+// ==========================================
+// 5. NHÓM ĐƠN HÀNG
+// ==========================================
+
+model Order {
+  id              String        @id @default(cuid())
+  userId          String
+  totalAmount     Float
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  shippingAddress String // Phải lưu string trực tiếp đề phòng Address trong DB bị xóa sau này
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  variantId String
+  quantity  Int
+  price     Float // Quan trọng: Lưu giá tại thời điểm mua, không phụ thuộc vào giá ProductVariant sau này
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@map("order_items")
+}
+
+// ==========================================
+// 6. NHÓM TƯƠNG TÁC & HIỂN THỊ
+// ==========================================
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  rating    Int // Từ 1 đến 5 sao
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("banners")
+}
