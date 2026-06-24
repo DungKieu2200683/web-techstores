@@ -36,12 +36,16 @@ class ReviewRepository {
 
   /**
    * @description Lấy Review cũ của User cho Sản phẩm này (nếu có)
-   * @returns trả về Review của người dùng mục đích kiểm tra xem đã bình luận cho sản phẩm này chưa
+   * @returns ReviewDTO trả về Review của người dùng. mục đích kiểm tra xem đã bình luận cho sản phẩm này chưa
    */
-  async getExistingReview(userId: string, productId: string) {
-    return await prisma.review.findFirst({
+  async getExistingReview(
+    userId: string,
+    productId: string,
+  ): Promise<ReviewDTO | null> {
+    const review = await prisma.review.findFirst({
       where: { userId, productId },
     });
+    return review as unknown as ReviewDTO | null;
   }
 
   /**
@@ -132,10 +136,11 @@ class ReviewRepository {
   /**
    * @description Lấy chi tiết 1 Review bằng ID
    */
-  async getReviewById(reviewId: string) {
-    return await prisma.review.findUnique({
+  async getReviewById(reviewId: string): Promise<ReviewDTO | null> {
+    const review = await prisma.review.findUnique({
       where: { id: reviewId },
     });
+    return review as unknown as ReviewDTO | null;
   }
 }
 
