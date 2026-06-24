@@ -5,6 +5,8 @@ import { sendError } from "../utils/response.util";
 /**
  * @description Trạm kiểm soát (Middleware) xác thực dữ liệu đầu vào.
  * @business Nó sẽ chặn mọi request không đạt chuẩn lại trước khi chạm tới Controller.
+ * @param schema là zod từ validate
+ * @returns trả về 1 trong 3 kiểu body, query, params đã được làm sạch
  */
 export const validate = (schema: ZodSchema) => {
   return async (

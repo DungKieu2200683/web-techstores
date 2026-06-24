@@ -4,6 +4,7 @@ import productRouter from './product.route';
 import categoryRouter from './category.route';
 import brandRouter from './brand.route';
 import cartRouter from './cart.route';
+import orderRouter from './order.route';
 
 const rootRouter = Router();
 
@@ -26,5 +27,8 @@ rootRouter.use('/products', productRouter);
 
 // Mount cart routes
 rootRouter.use('/cart', cartRouter);
+
+// Mount order routes
+rootRouter.use('/orders', orderRouter);
 
 export default rootRouter;
