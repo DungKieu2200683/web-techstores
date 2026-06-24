@@ -6,6 +6,7 @@ import brandRouter from './brand.route';
 import cartRouter from './cart.route';
 import orderRouter from './order.route';
 import reviewRouter from './review.route';
+import uploadRouter from './upload.route';
 
 const rootRouter = Router();
 
@@ -34,5 +35,8 @@ rootRouter.use('/orders', orderRouter);
 
 // Mount review routes
 rootRouter.use('/reviews', reviewRouter);
+
+// Mount upload routes
+rootRouter.use('/upload', uploadRouter);
 
 export default rootRouter;
