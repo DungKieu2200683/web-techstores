@@ -16,6 +16,7 @@ declare global {
  * @description Middleware xác thực Bearer Token (JWT). Nếu hợp lệ, gán dữ liệu giải mã vào `req.user` để các Controller phía sau sử dụng.
  * @business Kiểm tra xem Request có mang theo Thẻ thông hành (Token) hợp lệ hay không.
  * @throws `AppError` (401) nếu không có token, token giả mạo hoặc đã hết hạn.
+ * @returns gám `req.user` để dùng gồm id và role
  */
 export const protect = (req: Request, res: Response, next: NextFunction) => {
   try {

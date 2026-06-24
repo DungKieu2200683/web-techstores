@@ -10,7 +10,7 @@ export interface UserDTO {
   password?: string; // Tồn tại trong DB nhưng có thể bị xóa đi trước khi gửi cho Frontend
   fullName: string;
   phone: string | null;
-  role: 'CUSTOMER' | 'ADMIN' | string;
+  role: "CUSTOMER" | "ADMIN" | string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -22,11 +22,11 @@ export interface CreateUserDTO {
   password: string; // Bắt buộc phải có khi đăng ký
   fullName: string;
   phone?: string;
-  role?: 'CUSTOMER' | 'ADMIN';
+  role?: "CUSTOMER" | "ADMIN";
 }
 
 // 3. Kiểu dữ liệu trả về cho Frontend (Bảo mật, không chứa password)
-export type UserResponse = Omit<UserDTO, 'password'>;
+export type UserResponse = Omit<UserDTO, "password">;
 
 // 4. Data Transfer Object (DTO): Cấu trúc dữ liệu đầu vào cho Login
 export interface LoginDTO {
@@ -35,6 +35,9 @@ export interface LoginDTO {
 }
 
 // 5. Cấu trúc Payload chứa bên trong JWT Token
+/**
+ * @description định nghĩa id và role
+ */
 export interface JwtPayload {
   id: string;
   role: string;
