@@ -9,6 +9,7 @@ import reviewRouter from './review.route';
 import uploadRouter from './upload.route';
 import addressRouter from './address.route';
 import bannerRouter from './banner.route';
+import wishlistRouter from './wishlist.route';
 
 const rootRouter = Router();
 
@@ -34,6 +35,9 @@ rootRouter.use('/products', productRouter);
 
 // Mount cart routes
 rootRouter.use('/cart', cartRouter);
+
+// Mount wishlist routes
+rootRouter.use('/wishlists', wishlistRouter);
 
 // Mount order routes
 rootRouter.use('/orders', orderRouter);
