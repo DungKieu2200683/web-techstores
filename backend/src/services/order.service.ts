@@ -1,5 +1,6 @@
 import { orderRepository } from '../repositories/order.repository';
 import { cartRepository } from '../repositories/cart.repository';
+import { addressRepository } from '../repositories/address.repository';
 import { CheckoutInput } from '../validators/order.validator';
 import { AppError } from '../utils/AppError';
 import { OrderDTO, OrderStatus } from '../types/order.type';
@@ -15,7 +16,19 @@ class OrderService {
    * @description Thực hiện quá trình Thanh toán (Checkout) từ Giỏ hàng sang Đơn hàng
    */
   async checkout(userId: string, payload: CheckoutInput): Promise<OrderDTO> {
-    const { shippingAddress } = payload;
+    const { addressId } = payload;
+
+    // 0. Lấy và Xác thực Địa chỉ giao hàng
+    const address = await addressRepository.getAddressById(addressId);
+    if (!address) {
+      throw new AppError(404, 'Không tìm thấy địa chỉ giao hàng!');
+    }
+    if (address.userId !== userId) {
+      throw new AppError(403, 'Địa chỉ này không thuộc về bạn!');
+    }
+    
+    // Nối chuỗi địa chỉ để lưu cứng vào Đơn hàng (Đề phòng sau này User xóa Address thì Đơn hàng vẫn còn lưu vết)
+    const shippingAddress = `${address.street}, ${address.city}, ${address.state}${address.zipCode ? ` - ${address.zipCode}` : ''}`;
 
     // 1. Kéo toàn bộ Giỏ hàng của Khách về
     const cart = await cartRepository.getCartByUserId(userId);

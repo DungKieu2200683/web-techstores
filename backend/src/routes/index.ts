@@ -7,6 +7,8 @@ import cartRouter from './cart.route';
 import orderRouter from './order.route';
 import reviewRouter from './review.route';
 import uploadRouter from './upload.route';
+import addressRouter from './address.route';
+import bannerRouter from './banner.route';
 
 const rootRouter = Router();
 
@@ -17,6 +19,9 @@ const rootRouter = Router();
 
 // Mount user routes
 rootRouter.use('/users', userRouter);
+
+// Mount address routes
+rootRouter.use('/addresses', addressRouter);
 
 // Mount category routes
 rootRouter.use('/categories', categoryRouter);
@@ -35,6 +40,9 @@ rootRouter.use('/orders', orderRouter);
 
 // Mount review routes
 rootRouter.use('/reviews', reviewRouter);
+
+// Mount banner routes
+rootRouter.use('/banners', bannerRouter);
 
 // Mount upload routes
 rootRouter.use('/upload', uploadRouter);

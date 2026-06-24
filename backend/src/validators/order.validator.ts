@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 export const checkoutSchema = z.object({
   body: z.object({
-    shippingAddress: z.string().min(10, 'Địa chỉ giao hàng phải có ít nhất 10 ký tự để shipper có thể tìm thấy'),
+    addressId: z.string().min(1, 'Vui lòng cung cấp ID địa chỉ giao hàng'),
   })
 });
 
